@@ -1,0 +1,59 @@
+Kubeflow without Google Cloud Storage
+
+Is it possible to replace the usage of Google Cloud Storage buckets with an alternative on-premises solution so that it is possible to run e.g. Kubeflow Pipelines completely independent from the Google Cloud Platform?
+
+Yes it is possible. You can use minio, it's like s3/gs but it runs on a persistent volume of your on-premises storage.
+
+Here are the instructions on how to use it as a kfserving inference storage:
+
+Validate that minio is running in your kubeflow installation:
+
+$ kubectl get svc -n kubeflow |grep minio
+minio-service                                  ClusterIP   10.101.143.255   <none>        9000/TCP            81d
+Enable a tunnel for your minio:
+
+$ kubectl port-forward svc/minio-service -n kubeflow 9000:9000
+Forwarding from 127.0.0.1:9000 -> 9000
+Forwarding from [::1]:9000 -> 9000
+Browse http://localhost:9000 to get to the minio UI and create a bucket/upload your model. Credentials minio/minio123. Alternatively you can use the mc command to do it from your terminal:
+
+$ mc ls minio/models/flowers/0001/
+[2020-03-26 13:16:57 CET]  1.7MiB saved_model.pb
+[2020-04-25 13:37:09 CEST]      0B variables/
+Create a secret&serviceaccount for the minio access, note that the s3-endpoint defines the path to the minio, keyid&acceskey are the credentials encoded in base64:
+
+$ kubectl get secret mysecret -n homelab -o yaml
+apiVersion: v1
+data:
+  awsAccessKeyID: bWluaW8=
+  awsSecretAccessKey: bWluaW8xMjM=
+kind: Secret
+metadata:
+  annotations:
+    serving.kubeflow.org/s3-endpoint: minio-service.kubeflow:9000
+    serving.kubeflow.org/s3-usehttps: "0"
+  name: mysecret
+  namespace: homelab
+
+$ kubectl get serviceAccount -n homelab sa -o yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa
+  namespace: homelab
+secrets:
+- name: mysecret
+Finally, create your inferenceservice as follows:
+
+$ kubectl get inferenceservice tensorflow-flowers -n homelab -o yaml
+apiVersion: serving.kubeflow.org/v1alpha2
+kind: InferenceService
+metadata:
+  name: tensorflow-flowers
+  namespace: homelab
+spec:
+  default:
+    predictor:
+      serviceAccountName: sa
+      tensorflow:
+        storageUri: s3://models/flowers

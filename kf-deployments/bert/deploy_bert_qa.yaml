@@ -1,0 +1,19 @@
+apiVersion: serving.kubeflow.org/v1alpha2
+kind: InferenceService
+metadata:
+  labels:
+    controller-tools.k8s.io: "1.0"
+  name: kfserving-bert-qa-model
+spec:
+  default:
+    predictor:
+      custom:
+        container:
+          image: forwardmeasure/bert-kfserving:latest
+          resources:
+            requests:
+              memory: "4096Mi"
+              cpu: "250m"
+            limits:
+              memory: "4096Mi"
+              cpu: "500m"
