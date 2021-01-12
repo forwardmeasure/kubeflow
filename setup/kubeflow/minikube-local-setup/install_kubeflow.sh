@@ -11,8 +11,8 @@ export KF_NAME=fm-kubeflow
 # Set the path to the base directory where you want to store one or more 
 # Kubeflow deployments. For example, /opt/.
 # Then set the Kubeflow application directory for this deployment.
-export BASE_DIR=${SCRIPTS_DIR}/deployments
-export KF_DIR=${BASE_DIR}/${KF_NAME}
+export BASE_DIR=${HOME}/Documents/code/ForwardMeasure/projects
+export KF_DIR=${BASE_DIR}/kubeflow-deployments/${KF_NAME}
 
 # Set the configuration file to use, such as the file specified below:
 #export CONFIG_URI="https://raw.githubusercontent.com/kubeflow/manifests/v1.2-branch/kfdef/kfctl_istio_dex.v1.2.0.yaml"

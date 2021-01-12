@@ -1,14 +1,16 @@
-import spacy
-import numpy as np
+import importlib
 import logging
 
-# from spacy.cli import download
-# import importlib
-# download("en_core_web_sm")
-# importlib.reload(spacy)
+import numpy as np
+import spacy
+from spacy.cli import download
+
+download("en_core_web_sm")
+importlib.reload(spacy)
 
 nlp = spacy.load('en_core_web_sm', parser=False, entity=False)
-    
+
+
 class Transformer():
     __symbols = set("!$%^&*()_+|~-=`{}[]:\";'<>?,./-")
 
@@ -21,7 +23,7 @@ class Transformer():
 
     def fit(self, X, y=None, **fit_params):
         return self
-    
+
     @staticmethod
     def transform_to_token(text):
         str_text = str(text)
@@ -33,8 +35,7 @@ class Transformer():
             else:
                 clean_token = token.lemma_.lower().strip()
                 if len(clean_token) < 1 or clean_token in \
-                        Transformer.__symbols: 
+                        Transformer.__symbols:
                     continue
             tokens.append(clean_token)
         return tokens
-

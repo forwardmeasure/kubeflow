@@ -23,6 +23,7 @@ def nlp_pipeline(
     tfidf_max_features=10000,
     tfidf_ngram_range=3,
     batch_size="100",
+    image_pull_policy="Always",
 ):
     """
     Pipeline 
@@ -33,7 +34,7 @@ def nlp_pipeline(
 
     download_step = dsl.ContainerOp(
         name="data_downloader",
-        image="data_downloader:0.1",
+        image="forwardmeasure/data_downloader:0.1",
         command="python",
         arguments=[
             "/microservice/pipeline_step.py",
@@ -52,10 +53,12 @@ def nlp_pipeline(
         ],
         pvolumes={"/mnt": vop.volume},
     )
+    # set `imagePullPolicy` property for `container` with `PipelineParam`
+    download_step.container.set_image_pull_policy(image_pull_policy)
 
     clean_step = dsl.ContainerOp(
         name="clean_text",
-        image="clean_text_transformer:0.1",
+        image="forwardmeasure/clean_text_transformer:0.1",
         command="python",
         arguments=[
             "/microservice/pipeline_step.py",
@@ -66,10 +69,11 @@ def nlp_pipeline(
         ],
         pvolumes={"/mnt": download_step.pvolume},
     )
+    clean_step.container.set_image_pull_policy(image_pull_policy)
 
     tokenize_step = dsl.ContainerOp(
         name="tokenize",
-        image="spacy_tokenizer:0.1",
+        image="forwardmeasure/spacy_tokenizer:0.1",
         command="python",
         arguments=[
             "/microservice/pipeline_step.py",
@@ -80,10 +84,11 @@ def nlp_pipeline(
         ],
         pvolumes={"/mnt": clean_step.pvolume},
     )
+    tokenize_step.container.set_image_pull_policy(image_pull_policy)
 
     vectorize_step = dsl.ContainerOp(
         name="vectorize",
-        image="tfidf_vectorizer:0.1",
+        image="forwardmeasure/tfidf_vectorizer:0.1",
         command="python",
         arguments=[
             "/microservice/pipeline_step.py",
@@ -102,10 +107,11 @@ def nlp_pipeline(
         ],
         pvolumes={"/mnt": tokenize_step.pvolume},
     )
+    vectorize_step.container.set_image_pull_policy(image_pull_policy)
 
     predict_step = dsl.ContainerOp(
         name="predictor",
-        image="lr_text_classifier:0.1",
+        image="forwardmeasure/lr_text_classifier:0.1",
         command="python",
         arguments=[
             "/microservice/pipeline_step.py",
@@ -124,6 +130,7 @@ def nlp_pipeline(
         ],
         pvolumes={"/mnt": vectorize_step.pvolume},
     )
+    predict_step.container.set_image_pull_policy(image_pull_policy)
 
     try:
         seldon_config = yaml.load(
