@@ -5,7 +5,7 @@ metadata:
   labels:
     app: seldon
   name: "seldon-deployment-{{workflow.name}}"
-  namespace: kubeflow
+  namespace: forwardmeasure
 spec:
   annotations:
     project_name: NLP Pipeline
@@ -24,15 +24,24 @@ spec:
               - image: forwardmeasure/spacy_tokenizer:0.1
                 imagePullPolicy: Always
                 name: spacytokenizer
+                resources:
+                  requests:
+                    memory: 1Mi
               - image: forwardmeasure/tfidf_vectorizer:0.1
                 imagePullPolicy: Always
                 name: tfidfvectorizer
+                resources:
+                  requests:
+                    memory: 1Mi
                 volumeMounts:
                   - name: mypvc
                     mountPath: /mnt
               - image: forwardmeasure/lr_text_classifier:0.1
                 imagePullPolicy: Always
                 name: lrclassifier
+                resources:
+                  requests:
+                    memory: 1Mi
                 volumeMounts:
                   - name: mypvc
                     mountPath: /mnt
